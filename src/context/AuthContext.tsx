@@ -19,15 +19,8 @@ export interface StoredUser extends User {
 
 interface AuthContextType {
   user: User | null;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  signup: (
-    name: string,
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
 }
@@ -67,13 +60,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       // Demo account
-      if (email === "demo@example.com" && password === "password") {
+      if (
+        email === "demo@example.com".toLocaleLowerCase() &&
+        password === "password"
+      ) {
         const userData: User = {
           id: 1,
           name: "Demo User",
@@ -81,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
         setUser(userData);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-        return { success: true };
+        return true;
       }
 
       const users = await AsyncStorage.getItem("users");
@@ -98,12 +91,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
         setUser(userData);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-        return { success: true };
+        return true;
       } else {
-        return { success: false, error: "Invalid email or password" };
+        return false;
       }
     } catch (error) {
-      return { success: false, error: "Login failed. Please try again." };
+      return false;
     }
   };
 
@@ -111,13 +104,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     name: string,
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<boolean> => {
     try {
       const users = await AsyncStorage.getItem("users");
       const userList: StoredUser[] = users ? JSON.parse(users) : [];
 
       if (userList.find((u) => u.email === email)) {
-        return { success: false, error: "User with this email already exists" };
+        return false;
       }
 
       const newUser: StoredUser = {
@@ -138,9 +131,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-      return { success: true };
+      return true;
     } catch (error) {
-      return { success: false, error: "Signup failed. Please try again." };
+      return false;
     }
   };
 
